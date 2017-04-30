@@ -1,8 +1,10 @@
 // Motor Pins
-const int m11 = 50;
-const int m12 = 51;
-const int m21 = 52;
-const int m22 = 53;
+const int EN1 = 42;
+const int m11 = 44;
+const int m12 = 46;
+const int m21 = 48;
+const int m22 = 50;
+const int EN2 = 52;
 
 // Functions
 void forward();
@@ -14,6 +16,10 @@ void stopM();
 void setup() {
   Serial.begin(9600);
 
+  pinMode(EN1, OUTPUT);
+  pinMode(EN2, OUTPUT);
+  digitalWrite(EN1, HIGH);
+  digitalWrite(EN2, HIGH);
   pinMode(m21, OUTPUT);
   pinMode(m22, OUTPUT);
   pinMode(m11, OUTPUT);

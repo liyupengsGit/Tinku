@@ -15,17 +15,27 @@ const int midDefault = 512;
 const int endDefault = 740;
 const int defSpeed = 100;
 
+// Motor Pins
+const int EN1 = 42;
+const int m11 = 44;
+const int m12 = 46;
+const int m21 = 48;
+const int m22 = 50;
+const int EN2 = 52;
+
 // Sonar sensors
 const int sensor[6] = {9, 10, 11, 12, 13, 8};
 
 // Serial communication commands
 byte command = 0;
-/* 
- * command = 1 : expression
- * command = 2 : sonar sensor
- */
+/*
+   command = 1 : expression
+   command = 2 : sonar sensor
+   command = 3 : motor
+*/
 byte expression = 0;
 byte collision = 0;
+byte motor = 0;
 
 void setup()
 {
@@ -34,6 +44,15 @@ void setup()
   Dynamixel.begin(1000000, 40); // Inicialize the servo at 1Mbps and Pin Control 40
   Serial.println("Connected");
   defaultPos();                 // Move servos to the default position
+
+  pinMode(EN1, OUTPUT);         // Set motor pins as output
+  pinMode(EN2, OUTPUT);
+  digitalWrite(EN1, HIGH);
+  digitalWrite(EN2, HIGH);
+  pinMode(m21, OUTPUT);
+  pinMode(m22, OUTPUT);
+  pinMode(m11, OUTPUT);
+  pinMode(m12, OUTPUT);
   
   for (int i = 0; i < 6; i++)
     pinMode(sensor[i], OUTPUT);
@@ -46,31 +65,31 @@ void setup()
 *******************************************************************************************/
 void loop()
 {
-  if(Serial.available() > 0) {
+  if (Serial.available() > 0) {
     command = Serial.read();
     if (command == 1) {
       expression = Serial.read();
-      switch(expression) {
-        case 1:
-          yes();
-          break;
-        case 2:
-          no();
-          break;
-        case 3:
-          think();
-          break;
-        case 4:
-          sad();
-          break;
-        default:
-          defaultPos();
-          break;
+      switch (expression) {
+        case 1: yes(); break;
+        case 2: no(); break;
+        case 3: think(); break;
+        case 4: sad(); break;
+        default: defaultPos(); break;
       }
     }
     else if (command == 2) {
       collisionCheck();
       Serial.println(collision);
+    }
+    else if (command == 3) {
+      motor = Serial.read();
+      switch (motor) {
+        case 1: forward(); break;
+        case 2: backward(); break;
+        case 3: leftTurn(); break;
+        case 4: rightTurn(); break;
+        case 5: stopM(); break;
+      }
     }
   }
 }
@@ -91,7 +110,7 @@ void collisionCheck()
     if (distance[i] <= 10)
       bitSet(collision, i);
     else
-      bitClear(collision, i);    
+      bitClear(collision, i);
   }
 }
 
@@ -114,8 +133,8 @@ float Triger(int sensor)
 }
 
 /**********************************************************************************************************
- *Function: defaultPos()
- *Description: default position of the head
+  Function: defaultPos()
+  Description: default position of the head
  *********************************************************************************************************/
 void defaultPos()
 {
@@ -128,8 +147,8 @@ void defaultPos()
 }
 
 /**********************************************************************************************************
- *Function: yes()
- *Description: provide "yes" nod to the head
+  Function: yes()
+  Description: provide "yes" nod to the head
  *********************************************************************************************************/
 void yes()
 {
@@ -144,8 +163,8 @@ void yes()
 }
 
 /**********************************************************************************************************
- *Function: no()
- *Description: provide "no" nod to the head
+  Function: no()
+  Description: provide "no" nod to the head
  *********************************************************************************************************/
 void no()
 {
@@ -161,10 +180,10 @@ void no()
 }
 
 /**********************************************************************************************************
- *Function: think()
- *Description: provide "think" nod to the head
+  Function: think()
+  Description: provide "think" nod to the head
  *********************************************************************************************************/
- void think()
+void think()
 {
   defaultPos();
   Dynamixel.moveSpeed(midServo, 452, 100);
@@ -173,8 +192,8 @@ void no()
 }
 
 /**********************************************************************************************************
- *Function: sad()
- *Description: provide "sad" nod to the head
+  Function: sad()
+  Description: provide "sad" nod to the head
  *********************************************************************************************************/
 void sad()
 {
@@ -184,3 +203,53 @@ void sad()
   Dynamixel.moveSpeed(endServo, endDefault, 100);
 }
 
+/**********************************************************************************************************
+  Function: backward()
+  Description: move robot in backward direction
+ *********************************************************************************************************/
+void backward() {
+  digitalWrite(m12, HIGH);
+  digitalWrite(m11, LOW);
+  digitalWrite(m21, HIGH);
+  digitalWrite(m22, LOW);
+}
+/**********************************************************************************************************
+  Function: forward()
+  Description: move robot in forward direction
+ *********************************************************************************************************/
+void forward() {
+  digitalWrite(m12, LOW);
+  digitalWrite(m11, HIGH);
+  digitalWrite(m21, LOW);
+  digitalWrite(m22, HIGH);
+}
+/**********************************************************************************************************
+  Function: leftTurn()
+  Description: move robot in left direction
+ *********************************************************************************************************/
+void leftTurn() {
+  digitalWrite(m12, LOW);
+  digitalWrite(m11, HIGH);
+  digitalWrite(m21, HIGH);
+  digitalWrite(m22, LOW);
+}
+/**********************************************************************************************************
+  Function: rightTurn()
+  Description: move robot in right direction
+ *********************************************************************************************************/
+void rightTurn() {
+  digitalWrite(m12, HIGH);
+  digitalWrite(m11, LOW);
+  digitalWrite(m21, LOW);
+  digitalWrite(m22, HIGH);
+}
+/**********************************************************************************************************
+  Function: stopM()
+  Description: stop the robot
+ *********************************************************************************************************/
+void stopM() {
+  digitalWrite(m12, LOW);
+  digitalWrite(m11, LOW);
+  digitalWrite(m21, LOW);
+  digitalWrite(m22, LOW);
+}
